@@ -24,6 +24,31 @@ func secureSeed() int64 {
 }
 
 
+// defineChars(addDigits, addSpecial, excludeChars) defines the list of characters
+// 	to be used for password generation
+func defineChars(addDigits bool, addSpecial bool, excludeChars bool, exCharString string) string {
+	// Defining characters for the password
+	var lower = "abcdefghijklmnopqrstuvwxyz"
+	var upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	var chars = lower + upper
+	if addDigits {
+		var nums = "0123456789"
+		chars += nums
+	}
+	if addSpecial {
+		var symbols = "!@#$%^&*()_-+=<>?/{}[]|"
+		chars += symbols
+	}
+	if excludeChars {
+		excludeList := strings.Split(exCharString, "")
+		// implement dict/set
+		for _, item := range excludeList {
+			chars = strings.ReplaceAll(chars, item, "")
+		}
+	}
+}
+
+
 // passGen(length, digits, special) creates the password using the seed generated
 // 	by secureSeed()
 func passGen(length int, digits bool, special bool, exclude bool) string {
@@ -34,24 +59,6 @@ func passGen(length int, digits bool, special bool, exclude bool) string {
   
 	seed := secureSeed()
 	rand.Seed(secureSeed)
-	
-	// Defining characters for the password
-	var lower = "abcdefghijklmnopqrstuvwxyz"
-	var upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-	var chars = lower + upper
-	
-	if digits {
-		var nums = "0123456789"
-		chars += nums
-	}
-	
-	if special {
-		var symbols = "!@#$%^&*()_-+=<>?/{}[]|"
-		chars += symbols
-	}
-
-	// exclude not implemented yet. When exclude is true, passGen will exclude certain 
-	// 	user-defined characters from chars.
 	
 	// Generate the password
 	password := make([]byte, length)
