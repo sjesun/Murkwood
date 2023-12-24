@@ -7,6 +7,7 @@ import (
 	"math/rand"
 	"os"
 	"strings"
+	"unicode"
 )
 
 
@@ -18,7 +19,7 @@ func secureSeed() int64 {
 	if err != nil {
 		fmt.Println("Unable to generate secure seed. Error:", err)
 		fmt.Println("Exiting...")
-		os.Exit(0)
+		os.Exit(1)
 	}
 	return seed
 }
@@ -26,7 +27,7 @@ func secureSeed() int64 {
 
 // defineChars(addDigits, addSpecial, excludeChars) defines the list of characters
 // 	to be used for password generation
-func defineChars(addDigits bool, addSpecial bool, excludeChars bool, exCharString string) string {
+func defineChars(addDigits bool, addSpecial bool, excludeChars string) string {
 	// Defining characters for the password
 	var lower = "abcdefghijklmnopqrstuvwxyz"
 	var upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -39,7 +40,7 @@ func defineChars(addDigits bool, addSpecial bool, excludeChars bool, exCharStrin
 		var symbols = "!@#$%^&*()_-+=<>?/{}[]|"
 		chars += symbols
 	}
-	if excludeChars {
+	if excludeChars != "" { // user wants to exclude certain characters
 		charList := strings.Split(chars, "")
 		charDict := make(map[string]bool) // to store the one-character strings from charList
 		
@@ -50,7 +51,7 @@ func defineChars(addDigits bool, addSpecial bool, excludeChars bool, exCharStrin
 			}
 		}
 		// excluding characters from charDict
-		excludeList := strings.Split(exCharString, "")
+		excludeList := strings.Split(excludeChars, "")
 		for character := range excludeList {
 			if present := charDict[character]; present {
 				delete(charDict, character)
@@ -62,6 +63,8 @@ func defineChars(addDigits bool, addSpecial bool, excludeChars bool, exCharStrin
 			chars += key
 		}
 		
+		// also exclude similar characters
+		
 	}
 	return chars
 }
@@ -69,19 +72,43 @@ func defineChars(addDigits bool, addSpecial bool, excludeChars bool, exCharStrin
 
 // passGen(length, digits, special) creates the password using the seed generated
 // 	by secureSeed()
-func passGen(length int, chars string) string {
+func passGen(length int, chars string, allUnique bool) string {
 	// Ensuring the generated password is at least 12 characters long
 	if length < 12 {
 		length = 12
 	}
-  
+
+	if allUnique { // user wants no repeated characters
+		maxLength := len(chars)
+		if maxLength < length {
+			fmt.Println("Error: desired password length is larger than maximum possible length.")
+			fmt.Println("Unable to generate password. Exiting...")
+			os.Exit(1)
+		}
+	}
+
+	
 	seed := secureSeed()
 	rand.Seed(secureSeed)
 	
 	// Generate the password
 	password := make([]byte, length)
+	var lowercaseIndex = []
+	var uppercaseIndex = []
+	var numIndex = []
+	var symbolInde = []
 	for i := 0; i < length; i++ {
-		password[i] = chars[rand.Intn(len(chars))]
+		charToAdd := chars[rand.Intn(len(chars))]
+		if unicode.IsLower(charToAdd) {
+			lowercaseIndex = append(lowercaseIndex, i)
+		} else if unicode.IsUpper(charToAdd) {
+			uppercaseIndex = append(uppercaseIndex, i)
+		} else if unicode.IsDigit(charToAdd) {
+			numIndex = append(numIndex, i)
+		} else {
+			symbolIndex = append(symbolIndex, i)
+		}
+		password[i] = 
 	}
 
 	return string(password)
