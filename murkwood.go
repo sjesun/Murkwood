@@ -25,9 +25,23 @@ func secureSeed() int64 {
 }
 
 
+// excludeChars(target, exchars) removes the characters in exchars from target
+func excludeChars(target string, exchars string) string {
+	// creating a filtering function to use with strings.Map()
+	// must(c) filters for characters that need to be included in target
+	must := func (c rune) rune {
+		if strings.IndexRune(exchars, c) < 0 {
+			return c
+		}
+		return -1
+	}
+	return strings.Map(must, target)
+}
+
+
 // defineChars(addDigits, addSpecial, excludeChars) defines the list of characters
 // 	to be used for password generation
-func defineChars(addDigits bool, addSpecial bool, excludeChars string) string {
+func defineChars(addDigits bool, addSpecial bool, exclude string) string {
 	// Defining characters for the password
 	var lower = "abcdefghijklmnopqrstuvwxyz"
 	var upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -40,31 +54,11 @@ func defineChars(addDigits bool, addSpecial bool, excludeChars string) string {
 		var symbols = "!@#$%^&*()_-+=<>?/{}[]|"
 		chars += symbols
 	}
-	if excludeChars != "" { // user wants to exclude certain characters
-		charList := strings.Split(chars, "")
-		charDict := make(map[string]bool) // to store the one-character strings from charList
-		
-		// populating charDict with characters
-		for character := range charList {
-			if present := charDict[character]; !present {
-				charDict[character] = true
-			}
-		}
-		// excluding characters from charDict
-		excludeList := strings.Split(excludeChars, "")
-		for character := range excludeList {
-			if present := charDict[character]; present {
-				delete(charDict, character)
-			}
-		}
-		// updating chars
-		chars = ""
-		for key := range charDict {
-			chars += key
-		}
-		
+	if exclude != "" { // user wants to exclude certain characters
+		chars = excludeChars(chars, exclude)
+		//
 		// also exclude similar characters
-		
+		//		
 	}
 	return chars
 }
@@ -86,32 +80,36 @@ func passGen(length int, chars string, allUnique bool) string {
 			os.Exit(1)
 		}
 	}
-
 	
 	seed := secureSeed()
-	rand.Seed(secureSeed)
+	mrand.Seed(seed)
 	
 	// Generate the password
-	password := make([]byte, length)
-	var lowercaseIndex = []
-	var uppercaseIndex = []
-	var numIndex = []
-	var symbolIndex = []
+	password := ""
+	lowercaseIndex := []int{}
+	uppercaseIndex := []int{}
+	numIndex := []int{}
+	symbolIndex := []int{}
+	
 	for i := 0; i < length; i++ {
-		charToAdd := chars[rand.Intn(len(chars))]
-		if unicode.IsLower(charToAdd) {
+		charToAdd := string(chars[mrand.Intn(len(chars))])
+		if allUnique {
+			chars = excludeChars(chars, charToAdd)
+		}
+		charArray := []rune(charToAdd)
+		if unicode.IsLower(charArray[0]) {
 			lowercaseIndex = append(lowercaseIndex, i)
-		} else if unicode.IsUpper(charToAdd) {
+		} else if unicode.IsUpper(charArray[0]) {
 			uppercaseIndex = append(uppercaseIndex, i)
-		} else if unicode.IsDigit(charToAdd) {
+		} else if unicode.IsDigit(charArray[0]) {
 			numIndex = append(numIndex, i)
 		} else {
 			symbolIndex = append(symbolIndex, i)
 		}
-		password[i] = 
+		password += charToAdd
 	}
 
-	return string(password)
+	return password
 }
 
 // This is still in progress.
