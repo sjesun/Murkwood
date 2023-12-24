@@ -96,7 +96,7 @@ func passGen(length int, chars string, allUnique bool) string {
 	var lowercaseIndex = []
 	var uppercaseIndex = []
 	var numIndex = []
-	var symbolInde = []
+	var symbolIndex = []
 	for i := 0; i < length; i++ {
 		charToAdd := chars[rand.Intn(len(chars))]
 		if unicode.IsLower(charToAdd) {
