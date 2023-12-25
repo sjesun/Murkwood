@@ -12,6 +12,7 @@ import (
 	"unicode"
 )
 
+
 type passHashPair struct {
 	password, hash string
 }
@@ -98,29 +99,13 @@ func passGen(length int, chars string, repsAllowed bool) string {
 	
 	// Generate the password
 	password := ""
-	lowercaseIndex := []int{}
-	uppercaseIndex := []int{}
-	numIndex := []int{}
-	symbolIndex := []int{}
-	
 	for i := 0; i < length; i++ {
 		charToAdd := string(chars[mrand.Intn(len(chars))])
 		if !repsAllowed {
 			chars = excludeChars(chars, charToAdd)
 		}
-		charArray := []rune(charToAdd)
-		if unicode.IsLower(charArray[0]) {
-			lowercaseIndex = append(lowercaseIndex, i)
-		} else if unicode.IsUpper(charArray[0]) {
-			uppercaseIndex = append(uppercaseIndex, i)
-		} else if unicode.IsDigit(charArray[0]) {
-			numIndex = append(numIndex, i)
-		} else {
-			symbolIndex = append(symbolIndex, i)
-		}
 		password += charToAdd
 	}
-
 	return password
 }
 
