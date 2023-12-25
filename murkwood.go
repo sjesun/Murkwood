@@ -1,10 +1,12 @@
 package main
 
 import (
-	"crypto/rand"
+	"crypto/md5"
+	crand "crypto/rand"
 	"encoding/binary"
+	"encoding/hex"
 	"fmt"
-	"math/rand"
+	mrand "math/rand"
 	"os"
 	"strings"
 	"unicode"
@@ -27,10 +29,10 @@ func invalidInput(err string) {
 // 	for password generation.
 func secureSeed() int64 {
 	var seed int64
-	err := binary.Read(rand.Reader, binary.BigEndian, &seed) // rand.Reader ensures cryptographically secure randomization
+	err := binary.Read(crand.Reader, binary.BigEndian, &seed) // rand.Reader ensures cryptographically secure randomization
 	if err != nil {
-		fmt.Println("Unable to generate secure seed. Error:", err)
-		fmt.Println("Exiting...")
+		fmt.Println("Error:", err)
+		fmt.Println("Unable to generate secure seed. Exiting...")
 		os.Exit(1)
 	}
 	return seed
@@ -123,12 +125,21 @@ func passGen(length int, chars string, repsAllowed bool) string {
 }
 
 
+// hashGen(password) creates an MD5 hash string of the provided password.
+func hashGen(password string) {
+	hasher := md5.New()
+	hasher.Write([]byte(password))
+	hashSum := hasher.Sum(nil)
+	return hex.EncodeToString(hashSum[:])
+}
+
+
 func main() {
 	var passlength int
 	var numbers, specials, reps bool
 	var userWantsNums, userWantsSymbols, userWantsRepeats string
 	var noChars = ""
-	var validInputs = map[string]int{"y": true, "yes": true, "n": false, "no": false}
+	var validInputs = map[string]bool{"y": true, "yes": true, "n": false, "no": false}
 
 	fmt.Println("Enter password length: ")
 	fmt.Scanf("%v", &passlength)
@@ -167,6 +178,7 @@ func main() {
 
 	charsToUse := defineChars(numbers, specials, noChars)
 	php.password = passGen(passlength, charsToUse, reps)
-	return php.password
+	php.hash = hashGen(php.password)
+	return php
 }
 // This is still in progress.
