@@ -10,6 +10,18 @@ import (
 	"unicode"
 )
 
+type passHashPair struct {
+	password, hash string
+}
+
+
+// invalidInput(err) displays an error message in case of invalid inputs.
+func invalidInput(err string) {
+	fmt.Println("Error: ", err)
+	fmt.Println("Unable to generate password. Exiting...")
+	os.Exit(1)
+}
+
 
 // secureSeed() generates a cryptographically secure random seed to be used
 // 	for password generation.
@@ -66,18 +78,16 @@ func defineChars(addDigits bool, addSpecial bool, exclude string) string {
 
 // passGen(length, digits, special) creates the password using the seed generated
 // 	by secureSeed()
-func passGen(length int, chars string, allUnique bool) string {
+func passGen(length int, chars string, repsAllowed bool) string {
 	// Ensuring the generated password is at least 12 characters long
 	if length < 12 {
 		length = 12
 	}
 
-	if allUnique { // user wants no repeated characters
+	if !repsAllowed { // user wants no repeated characters
 		maxLength := len(chars)
 		if maxLength < length {
-			fmt.Println("Error: desired password length is larger than maximum possible length.")
-			fmt.Println("Unable to generate password. Exiting...")
-			os.Exit(1)
+			invalidInput("Desired password length is larger than maximum possible length.")
 		}
 	}
 	
@@ -93,7 +103,7 @@ func passGen(length int, chars string, allUnique bool) string {
 	
 	for i := 0; i < length; i++ {
 		charToAdd := string(chars[mrand.Intn(len(chars))])
-		if allUnique {
+		if !repsAllowed {
 			chars = excludeChars(chars, charToAdd)
 		}
 		charArray := []rune(charToAdd)
@@ -112,4 +122,51 @@ func passGen(length int, chars string, allUnique bool) string {
 	return password
 }
 
+
+func main() {
+	var passlength int
+	var numbers, specials, reps bool
+	var userWantsNums, userWantsSymbols, userWantsRepeats string
+	var noChars = ""
+	var validInputs = map[string]int{"y": true, "yes": true, "n": false, "no": false}
+
+	fmt.Println("Enter password length: ")
+	fmt.Scanf("%v", &passlength)
+	if passlength < 1 {
+		invalidInput("Invalid password length.")
+	}
+	
+	fmt.Println("Allow numbers? (yes/no): ")
+	fmt.Scanln(&userWantsNums)
+	userWantsNums = strings.ToLower(userWantsNums)
+	if val, ans := validInputs[userWantsNums]; !ans {
+		invalidInput("Invalid input. Please enter yes or no.")
+	}
+	numbers = validInputs[userWantsNums]
+
+	fmt.Println("Allow special characters? (yes/no): ")
+	fmt.Scanln(&userWantsSymbols)
+	userWantsSymbols = strings.ToLower(userWantsSymbols)
+	if val, ans := validInputs[userWantsSymbols]; !ans {
+		invalidInput("Invalid input. Please enter yes or no.")
+	}
+	specials = validInputs[userWantsSymbols]
+
+	fmt.Println("Allow characters to be repeated? (yes/no): ")
+	fmt.Scanln(&userWantsRepeats)
+	userWantsRepeats = strings.ToLower(userWantsRepeats)
+	if val, ans := validInputs[userWantsRepeats]; !ans {
+		invalidInput("Invalid input. Please enter yes or no.")
+	}
+	reps = validInputs[userWantsRepeats]
+
+	fmt.Println("Enter characters to exclude from the password (if none, press Enter): ")
+	fmt.Scanln(&noChars)
+
+	php := passHashPair{"", ""}
+
+	charsToUse := defineChars(numbers, specials, noChars)
+	php.password = passGen(passlength, charsToUse, reps)
+	return php.password
+}
 // This is still in progress.
